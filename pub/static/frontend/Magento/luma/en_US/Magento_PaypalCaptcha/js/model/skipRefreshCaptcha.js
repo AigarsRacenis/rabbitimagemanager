@@ -1,1 +1,12 @@
-/var/www/html/vendor/magento/module-paypal-captcha/view/frontend/web/js/model/skipRefreshCaptcha.js
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+define(['ko'], function (ko) {
+    'use strict';
+
+    return {
+        skip: ko.observable(false)
+    };
+});

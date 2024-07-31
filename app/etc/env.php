@@ -1,7 +1,7 @@
 <?php
 return [
     'backend' => [
-        'frontName' => 'admin_1etram'
+        'frontName' => 'admin'
     ],
     'cache' => [
         'graphql' => [
