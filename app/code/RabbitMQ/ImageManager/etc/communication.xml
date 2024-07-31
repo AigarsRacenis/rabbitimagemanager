@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Communication/etc/communication.xsd">
+    <topic name="image.manager.queue" request="string" response="string" is_synchronous="false">
+        <handler name="image.manager.queue" type="RabbitMQ\ImageManager\Model\Queue\Handler\ImageManagerHandler"
+                 method="process"/>
+    </topic>
+</config>

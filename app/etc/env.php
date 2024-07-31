@@ -21,7 +21,14 @@ return [
         'driver' => 'file'
     ],
     'queue' => [
-        'consumers_wait_for_messages' => 1
+        'consumers_wait_for_messages' => 1,
+        'amqp' => [
+            'host' => 'rabbitmq',
+            'port' => '5672',
+            'user' => 'admin',
+            'password' => 'admin',
+            'virtualhost' => '/'
+        ]
     ],
     'crypt' => [
         'key' => 'a315a035ae56f2d9f896ed97570f4102'
