@@ -1,0 +1,154 @@
+version: "3.9"
+
+services:
+  traefik:
+    container_name: traefik
+    image: traefik:2.7
+    command:
+      - --api
+
+      - --entrypoints.http.address=:80
+      - --entrypoints.https.address=:443
+
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+
+      - --certificatesresolvers.letsencrypt.acme.email=hosting@magebit.com
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - default
+    volumes:
+      - ~/letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.to-https.rule=HostRegexp(`{host:.+}`)
+      - traefik.http.routers.to-https.entrypoints=http
+      - traefik.http.routers.to-https.middlewares=to-https
+
+      - traefik.http.routers.traefik.rule=Host(`$TRAEFIK_HOST`)
+      - traefik.http.routers.traefik.entrypoints=https
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.tls=true
+      - traefik.http.routers.traefik.tls.certresolver=letsencrypt
+      - traefik.http.services.traefik.loadbalancer.server.port=8080
+      - traefik.http.routers.traefik.middlewares=stgin-auth
+
+      - traefik.http.middlewares.to-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.stgin-auth.basicauth.users=stgin:$$apr1$$No50RI0g$$rdfXSSQuSFLf8NUnN59WN0
+      - traefik.http.middlewares.stgin-auth.basicauth.removeheader=true
+    restart: always
+
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:2.11.1
+    networks:
+      - default
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer:/data
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.portainer.rule=Host(`$PORTAINER_HOST`)
+      - traefik.http.routers.portainer.entrypoints=https
+      - traefik.http.routers.portainer.tls=true
+      - traefik.http.routers.portainer.tls.certresolver=letsencrypt
+      - traefik.http.services.portainer.loadbalancer.server.port=9000
+    restart: always
+
+  mailpit:
+    container_name: mailpit
+    image: axllent/mailpit:latest
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.mailpit.rule=Host(`$MAILPIT_HOST`)
+      - traefik.http.routers.mailpit.entrypoints=https
+      - traefik.http.routers.mailpit.tls=true
+      - traefik.http.routers.mailpit.tls.certresolver=letsencrypt
+      - traefik.http.services.mailpit.loadbalancer.server.port=8025
+      - traefik.http.routers.mailpit.middlewares=stgin-auth
+
+  php:
+    env_file:
+      - ./.docker/.env.dev
+    volumes:
+      - ${HOME}/shared:${HOME}/shared
+    networks:
+      - default
+    restart: always
+
+  xdebug:
+    env_file:
+      - ./.docker/.env.dev
+    volumes:
+      - ${HOME}/shared:${HOME}/shared
+    networks:
+      - default
+    restart: always
+
+  nginx:
+    env_file:
+      - ./.docker/.env.dev
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.magento.rule=Host(`$PROJECT_HOST`)
+      - traefik.http.routers.magento.entrypoints=https
+      - traefik.http.routers.magento.tls=true
+      - traefik.http.routers.magento.tls.certresolver=letsencrypt
+      - traefik.http.services.magento.loadbalancer.server.port=8080
+      - traefik.http.routers.magento.middlewares=stgin-auth
+    volumes:
+      - ${HOME}/shared:${HOME}/shared
+    networks:
+      default:
+        aliases:
+          - nginx.magento.docker
+    restart: always
+
+  db:
+    networks:
+      default:
+        aliases:
+          - db.magento.docker
+    restart: always
+
+  redis:
+    networks:
+      default:
+        aliases:
+          - redis.magento.docker
+    restart: always
+
+  opensearch:
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.opensearch.rule=Host(`$ELASTICSEARCH_HOST`)
+      - traefik.http.routers.opensearch.entrypoints=https
+      - traefik.http.routers.opensearch.tls=true
+      - traefik.http.routers.opensearch.tls.certresolver=letsencrypt
+      - traefik.http.services.opensearch.loadbalancer.server.port=9200
+      - traefik.http.routers.opensearch.middlewares=stgin-auth
+    networks:
+      default:
+        aliases:
+          - es.magento.docker
+    restart: always
+
+  healthc:
+    container_name: magento-health
+    image: nginx
+    ports:
+      - "850:80"
+    restart: always
+
+volumes:
+  portainer:
+
+networks:
+  default:
+    name: magento

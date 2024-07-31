@@ -1,0 +1,66 @@
+version: "3.9"
+
+name: rabbitimagemanager
+
+services:
+  php:
+    env_file:
+      - ./.docker/.env.local
+    volumes:
+      - ~/.composer:/var/www/.composer
+    networks:
+      magebit:
+        aliases:
+          - php.rabbitimagemanager.docker
+
+  xdebug:
+    env_file:
+      - ./.docker/.env.local
+    volumes:
+      - ~/.composer:/var/www/.composer
+    networks:
+      magebit:
+        aliases:
+          - xdebug.rabbitimagemanager.docker
+
+  nginx:
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.rabbitimagemanager.tls=true
+      - traefik.http.routers.rabbitimagemanager.entrypoints=https
+      - traefik.http.routers.rabbitimagemanager.rule=Host(`rabbitimagemanager.docker`)
+      - traefik.http.services.rabbitimagemanager.loadbalancer.server.port=8080
+    env_file:
+      - ./.docker/.env.local
+    networks:
+      magebit:
+        aliases:
+          - nginx.rabbitimagemanager.docker
+
+  db:
+    networks:
+      magebit:
+        aliases:
+          - db.rabbitimagemanager.docker
+
+  redis:
+    networks:
+      magebit:
+        aliases:
+          - redis.rabbitimagemanager.docker
+
+  opensearch:
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.rabbitimagemanager-es.tls=true
+      - traefik.http.routers.rabbitimagemanager-es.entrypoints=https
+      - traefik.http.routers.rabbitimagemanager-es.rule=Host(`es.rabbitimagemanager.docker`)
+      - traefik.http.services.rabbitimagemanager-es.loadbalancer.server.port=9200
+    networks:
+      magebit:
+        aliases:
+          - es.rabbitimagemanager.docker
+
+networks:
+  magebit:
+    external: true
