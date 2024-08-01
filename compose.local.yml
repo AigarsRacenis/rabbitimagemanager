@@ -61,6 +61,26 @@ services:
         aliases:
           - es.rabbitimagemanager.docker
 
+  rabbitmq:
+    container_name: rabbitimagemanager-rabbitmq
+    image: rabbitmq:management
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.rabbitimagemanager-rabbitmq.tls=true
+      - traefik.http.routers.rabbitimagemanager-rabbitmq.entrypoints=https
+      - traefik.http.routers.rabbitimagemanager-rabbitmq.rule=Host(`rabbitmq.rabbitimagemanager.docker`)
+      - traefik.http.services.rabbitimagemanager-rabbitmq.loadbalancer.server.port=15672
+    hostname: rabbitmq.rabbitimagemanager
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    networks:
+      magebit:
+        aliases:
+          - rabbitmq.rabbitimagemanager.docker
+
 networks:
   magebit:
     external: true

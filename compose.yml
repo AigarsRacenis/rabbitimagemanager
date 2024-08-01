@@ -77,3 +77,4 @@ volumes:
   db_data:
   redis_data:
   opensearch_data:
+  rabbitmq_data:
