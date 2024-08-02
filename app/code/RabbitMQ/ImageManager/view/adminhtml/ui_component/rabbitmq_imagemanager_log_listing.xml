@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">rabbitmq_imagemanager_log_listing.rabbitmq_imagemanager_log_listing_data_source</item>
+        </item>
+    </argument>
+    <settings>
+        <spinner>rabbitmq_imagemanager_log_columns</spinner>
+        <deps>
+            <dep>rabbitmq_imagemanager_log_listing.rabbitmq_imagemanager_log_listing_data_source</dep>
+        </deps>
+    </settings>
+    <dataSource name="rabbitmq_imagemanager_log_listing_data_source" component="Magento_Ui/js/grid/provider">
+        <settings>
+            <storageConfig>
+                <param name="indexField" xsi:type="string">log_id</param>
+            </storageConfig>
+            <updateUrl path="mui/index/render"/>
+        </settings>
+        <aclResource>RabbitMQ_ImageManager::log</aclResource>
+        <dataProvider class="RabbitMQ\ImageManager\Ui\Component\Listing\DataProvider" name="rabbitmq_imagemanager_log_listing_data_source">
+            <settings>
+                <requestFieldName>id</requestFieldName>
+                <primaryFieldName>log_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+    <columns name="rabbitmq_imagemanager_log_columns">
+        <column name="log_id">
+            <settings>
+                <filter>textRange</filter>
+                <label translate="true">ID</label>
+                <sorting>asc</sorting>
+            </settings>
+        </column>
+        <column name="message_type">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Message Type</label>
+            </settings>
+        </column>
+        <column name="status">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Status</label>
+            </settings>
+        </column>
+        <column name="image_path">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Image Path</label>
+            </settings>
+        </column>
+        <column name="created_at" class="Magento\Ui\Component\Listing\Columns\Date">
+            <settings>
+                <filter>dateRange</filter>
+                <dataType>date</dataType>
+                <label translate="true">Created At</label>
+            </settings>
+        </column>
+    </columns>
+</listing>

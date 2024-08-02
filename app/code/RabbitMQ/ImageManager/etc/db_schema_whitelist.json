@@ -1,0 +1,14 @@
+{
+    "rabbitmq_imagemanager_log": {
+        "column": {
+            "log_id": true,
+            "message_type": true,
+            "status": true,
+            "image_path": true,
+            "created_at": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
+    }
+}

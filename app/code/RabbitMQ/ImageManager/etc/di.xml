@@ -3,4 +3,13 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <preference for="Magento\Framework\MessageQueue\ConsumerConfigurationInterface"
                 type="Magento\Framework\MessageQueue\ConsumerConfiguration" />
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="rabbitmq_imagemanager_log_listing_data_source"
+                      xsi:type="string">RabbitMQ\ImageManager\Model\ResourceModel\Log\Grid\Collection
+                </item>
+            </argument>
+        </arguments>
+    </type>
 </config>

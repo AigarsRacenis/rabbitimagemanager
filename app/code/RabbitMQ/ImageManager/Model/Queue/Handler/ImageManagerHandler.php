@@ -14,9 +14,6 @@ class ImageManagerHandler
 
     public function process($message)
     {
-        // Process the message
-        // This is where you'll implement the logic to download and attach the image
-        // For now, we'll just log the message
         $this->logger->info("Received message: " . print_r($message, true));
     }
 }
