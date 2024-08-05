@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="rabbitmq_imagemanager_log" resource="default" engine="innodb" comment="RabbitMQ Image Manager Log">
+        <column xsi:type="int" name="log_id" unsigned="true" nullable="false" identity="true" comment="Log ID"/>
+        <column xsi:type="varchar" name="message_type" nullable="false" length="255" comment="Message Type"/>
+        <column xsi:type="varchar" name="status" nullable="false" length="50" comment="Status"/>
+         <column xsi:type="varchar" name="image_path" nullable="false" length="255" comment="Image Path"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="log_id"/>
+        </constraint>
+    </table>
+</schema>

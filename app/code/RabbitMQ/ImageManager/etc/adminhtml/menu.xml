@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="RabbitMQ_ImageManager::log" title="RabbitMQ Image Manager Log"
+             module="RabbitMQ_ImageManager" sortOrder="50" parent="Magento_Backend::content"
+             action="rabbitmq_imagemanager/log/index" resource="RabbitMQ_ImageManager::log"/>
+    </menu>
+</config>
