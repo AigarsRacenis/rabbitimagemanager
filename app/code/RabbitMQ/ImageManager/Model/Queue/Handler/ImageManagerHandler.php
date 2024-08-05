@@ -163,7 +163,7 @@ class ImageManagerHandler implements ConsumerInterface
 
             $localImagePath = $downloadDir . DIRECTORY_SEPARATOR . basename($imagePath);
 
-        // Lejupielādes daļa
+            // Lejupielādes daļa
             if (!file_exists($localImagePath)) {
                 $this->downloadImage($imagePath, $localImagePath);
 
@@ -187,6 +187,9 @@ class ImageManagerHandler implements ConsumerInterface
                     return;
                 }
             }
+
+            $product->setCustomAttribute('image_path', null);
+            $this->productRepository->save($product);
 
             $product->addImageToMediaGallery($localImagePath, ['image', 'small_image', 'thumbnail'], false, false);
             $this->productRepository->save($product);
