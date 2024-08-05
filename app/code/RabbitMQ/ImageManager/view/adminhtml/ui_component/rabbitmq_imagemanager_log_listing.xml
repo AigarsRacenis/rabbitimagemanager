@@ -20,7 +20,7 @@
             <updateUrl path="mui/index/render"/>
         </settings>
         <aclResource>RabbitMQ_ImageManager::log</aclResource>
-        <dataProvider class="RabbitMQ\ImageManager\Ui\Component\Listing\DataProvider" name="rabbitmq_imagemanager_log_listing_data_source">
+        <dataProvider class="Magento\Framework\View\Element\UiComponent\DataProvider\DataProvider" name="rabbitmq_imagemanager_log_listing_data_source">
             <settings>
                 <requestFieldName>id</requestFieldName>
                 <primaryFieldName>log_id</primaryFieldName>
