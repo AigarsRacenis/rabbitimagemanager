@@ -10,7 +10,7 @@ use Psr\Log\LoggerInterface;
 
 class DeleteOldLogs
 {
-    private const DAYS_TO_KEEP_LOGS = 0;
+    private const DAYS_TO_KEEP_LOGS = 1;
 
     /**
      * @var CollectionFactory

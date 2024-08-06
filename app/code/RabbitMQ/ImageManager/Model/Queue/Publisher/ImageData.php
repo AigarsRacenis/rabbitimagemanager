@@ -71,12 +71,12 @@ class ImageData
             $this->publisher->publish(self::TOPIC_NAME, $this->serializer->serialize($imageData));
             $result = 1;
             $msg = 'Image data successfully published to RabbitMQ';
-            $this->addLog('Publish', 'Success', $imageData['image_path'] ?? '');
+            $this->addLog('Publish', 'Success', $imageData['image_path'] ?? '', $imageData['entity_id'], $imageData['store_id']);
         } catch (\Exception $exception) {
             $result = 0;
             $msg = $exception->getMessage();
             $this->logger->error('RabbitMQ Image Manager data export to Rabbit: ' . $msg);
-            $this->addLog('Publish', 'Error', $imageData['image_path'] ?? '');
+            $this->addLog('Publish', 'Error', $imageData['image_path'] ?? '', $imageData['entity_id'], $imageData['store_id']);
         }
 
         return [
@@ -90,14 +90,19 @@ class ImageData
      *
      * @param string $messageType
      * @param string $status
+     * @param string $imagePath
+     * @param string $enityId
+     * @param string $storeId
      */
-    private function addLog(string $messageType, string $status, string $imagePath): void
+    private function addLog(string $messageType, string $status, string $imagePath, string $entityId, int $storeId): void
     {
         try {
             $log = $this->logFactory->create();
             $log->setMessageType($messageType);
             $log->setStatus($status);
             $log->setImagePath($imagePath);
+            $log->setEntityId($entityId);
+            $log->setStoreId($storeId);
             $this->logResource->save($log);
         } catch (\Exception $e) {
             $this->logger->error('Failed to add log: ' . $e->getMessage());
