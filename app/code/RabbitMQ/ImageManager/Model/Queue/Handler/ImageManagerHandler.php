@@ -163,6 +163,19 @@ class ImageManagerHandler implements ConsumerInterface
 
             $localImagePath = $downloadDir . DIRECTORY_SEPARATOR . basename($imagePath);
 
+            // Produkta daļa
+            $product = $this->productRepository->getById($entityId, false, $storeId);
+
+            $existingMediaGallery = $product->getMediaGalleryImages();
+
+            foreach ($existingMediaGallery as $mediaImage) {
+                if (basename($mediaImage->getFile()) === basename($localImagePath)) {
+                    $this->logger->info("Image already exists for productId: $entityId");
+
+                    return;
+                }
+            }
+
             // Lejupielādes daļa
             if (!file_exists($localImagePath)) {
                 $this->downloadImage($imagePath, $localImagePath);
@@ -174,30 +187,17 @@ class ImageManagerHandler implements ConsumerInterface
                 }
             }
 
-            // Produkta daļa
-            $product = $this->productRepository->getById($entityId, false, $storeId);
-
-            $existingMediaGallery = $product->getMediaGalleryImages();
-
-            foreach ($existingMediaGallery as $mediaImage) {
-                if (basename($mediaImage->getFile()) === basename($localImagePath)) {
-                    $this->logger->info("Image already exists for productId: $entityId");
-                    $this->addLog('Consume', 'Skipped', $localImagePath);
-
-                    return;
-                }
-            }
-
             $product->setCustomAttribute('image_path', null);
             $this->productRepository->save($product);
 
             $product->addImageToMediaGallery($localImagePath, ['image', 'small_image', 'thumbnail'], false, false);
+            $product->setCustomAttribute('image_path', $imagePath);
             $this->productRepository->save($product);
 
-            $this->addLog('Consume', 'Success', $localImagePath);
+            $this->addLog('Consume', 'Success', $imagePath, $entityId, $storeId);
             $this->logger->info("Successfully processed image for product $entityId");
         } catch (\Exception $e) {
-            $this->addLog('Consume', 'Error', $imagePath);
+            $this->addLog('Consume', 'Error', $imagePath, $entityId, $storeId);
             $this->logger->error("Error processing image for product $entityId: " . $e->getMessage());
         }
     }
@@ -218,13 +218,24 @@ class ImageManagerHandler implements ConsumerInterface
         }
     }
 
-    private function addLog(string $messageType, string $status, string $imagePath): void
+    /**
+     * Add log to database
+     *
+     * @param string $messageType
+     * @param string $status
+     * @param string $imagePath
+     * @param string $enityId
+     * @param string $storeId
+     */
+    private function addLog(string $messageType, string $status, string $imagePath, string $entityId, int $storeId): void
     {
         try {
             $log = $this->logFactory->create();
             $log->setMessageType($messageType);
             $log->setStatus($status);
             $log->setImagePath($imagePath);
+            $log->setEntityId($entityId);
+            $log->setStoreId($storeId);
             $this->logResource->save($log);
         } catch (\Exception $e) {
             $this->logger->error('Failed to add log: ' . $e->getMessage());
