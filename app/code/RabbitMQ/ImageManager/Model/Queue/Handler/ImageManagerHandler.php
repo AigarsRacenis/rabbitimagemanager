@@ -3,23 +3,24 @@ declare(strict_types=1);
 
 namespace RabbitMQ\ImageManager\Model\Queue\Handler;
 
+use Psr\Log\LoggerInterface;
+use Magento\Framework\Filesystem;
+use Magento\Framework\HTTP\Client\Curl;
+use Magento\Framework\Filesystem\Io\File;
+use RabbitMQ\ImageManager\Model\LogFactory;
+use Magento\Framework\MessageQueue\QueueInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\Filesystem;
-use Magento\Framework\Filesystem\Io\File;
-use Magento\Framework\HTTP\Client\Curl;
-use Magento\Framework\MessageQueue\CallbackInvokerInterface;
-use Magento\Framework\MessageQueue\Consumer\ConfigInterface as ConsumerConfig;
 use Magento\Framework\MessageQueue\ConsumerInterface;
-use Magento\Framework\MessageQueue\ConsumerConfigurationInterface;
-use Magento\Framework\MessageQueue\QueueInterface;
-use Psr\Log\LoggerInterface;
-use RabbitMQ\ImageManager\Model\LogFactory;
+use Magento\Framework\MessageQueue\CallbackInvokerInterface;
 use RabbitMQ\ImageManager\Model\ResourceModel\Log as LogResource;
+use Magento\Framework\MessageQueue\ConsumerConfigurationInterface;
+use Magento\Framework\MessageQueue\Consumer\ConfigInterface as ConsumerConfig;
 
 class ImageManagerHandler implements ConsumerInterface
 {
     private const DOWNLOAD_SUBDIR = 'rabbitmq_downloads';
+    private const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif'];
 
     /**
      * @var Curl
@@ -133,6 +134,7 @@ class ImageManagerHandler implements ConsumerInterface
 
                     if (!is_array($messageBody)) {
                         $queue->acknowledge($message);
+
                         return;
                     }
                 }
@@ -154,38 +156,45 @@ class ImageManagerHandler implements ConsumerInterface
 
             $this->logger->info("Processing image for entity ID: $entityId, store ID: $storeId, image path: $imagePath");
 
+            if (!$this->isValidUrl($imagePath)) {
+                $this->addLog('Consume', 'Invalid URL', $imagePath, $entityId, $storeId);
+
+                return;
+            }
+
+            if (!$this->isValidExtension($imagePath)) {
+                $this->addLog('Consume', 'Invalid Extension', $imagePath, $entityId, $storeId);
+
+                return;
+            }
+            $imageName = basename($imagePath);
             $mediaDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::MEDIA);
             $downloadDir = $mediaDirectory->getAbsolutePath(self::DOWNLOAD_SUBDIR);
+            $localImagePath = $downloadDir . DIRECTORY_SEPARATOR . $imageName;
 
             if (!is_dir($downloadDir)) {
                 $this->file->mkdir($downloadDir);
             }
 
-            $localImagePath = $downloadDir . DIRECTORY_SEPARATOR . basename($imagePath);
+            // Check if the image already exists in the downloads folder
+            if (!$this->imageExistsInDownloads($imageName)) {
+                try {
+                    $this->downloadImage($imagePath, $localImagePath);
 
-            // Produkta daļa
+                    if (!file_exists($localImagePath)) {
+                        $this->addLog('Consume', sprintf("[%s]","Couldn't download"), $imagePath, $entityId, $storeId);
+                        return;
+                    }
+                } catch (\Exception $e) {
+                    $this->addLog('Consume', 'Error downloading image', $imagePath, $entityId, $storeId);
+
+                    return;
+                }
+            } else {
+                $this->logger->info("Image already exists in downloads folder: $imageName. Skipping download.");
+            }
+
             $product = $this->productRepository->getById($entityId, false, $storeId);
-
-            $existingMediaGallery = $product->getMediaGalleryImages();
-
-            foreach ($existingMediaGallery as $mediaImage) {
-                if (basename($mediaImage->getFile()) === basename($localImagePath)) {
-                    $this->logger->info("Image already exists for productId: $entityId");
-
-                    return;
-                }
-            }
-
-            // Lejupielādes daļa
-            if (!file_exists($localImagePath)) {
-                $this->downloadImage($imagePath, $localImagePath);
-
-                if (!file_exists($localImagePath)) {
-                    throw new \Exception("Local image file does not exist after download: $localImagePath");
-
-                    return;
-                }
-            }
 
             $product->setCustomAttribute('image_path', null);
             $this->productRepository->save($product);
@@ -202,14 +211,10 @@ class ImageManagerHandler implements ConsumerInterface
         }
     }
 
-
     private function downloadImage(string $imageUrl, string $localPath): void
     {
         try {
             $this->curl->get($imageUrl);
-            if ($this->curl->getStatus() !== 200) {
-                throw new \Exception("Failed to download image: " . $this->curl->getStatus());
-            }
             $this->file->write($localPath, $this->curl->getBody());
         } catch (\Exception $e) {
             $this->logger->error("Error downloading image: " . $e->getMessage());
@@ -225,9 +230,9 @@ class ImageManagerHandler implements ConsumerInterface
      * @param string $status
      * @param string $imagePath
      * @param string $enityId
-     * @param string $storeId
+     * @param $storeId
      */
-    private function addLog(string $messageType, string $status, string $imagePath, string $entityId, int $storeId): void
+    private function addLog(string $messageType, string $status, string $imagePath, string $entityId, $storeId): void
     {
         try {
             $log = $this->logFactory->create();
@@ -240,5 +245,29 @@ class ImageManagerHandler implements ConsumerInterface
         } catch (\Exception $e) {
             $this->logger->error('Failed to add log: ' . $e->getMessage());
         }
+    }
+
+    private function imageExistsInDownloads(string $imageName): bool
+    {
+        $mediaDirectory = $this->filesystem->getDirectoryRead(DirectoryList::MEDIA);
+        $downloadDir = $mediaDirectory->getAbsolutePath(self::DOWNLOAD_SUBDIR);
+        $localImagePath = $downloadDir . DIRECTORY_SEPARATOR . $imageName;
+        return file_exists($localImagePath);
+    }
+
+    private function isValidUrl(string $url): bool
+    {
+        if (filter_var($url, FILTER_VALIDATE_URL)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function isValidExtension(string $url): bool
+    {
+        $pattern = '/\.(?:'.implode('|', self::ALLOWED_EXTENSIONS). ')$/i';
+
+        return preg_match($pattern, $url) === 1;
     }
 }

@@ -39,6 +39,27 @@
         </massaction>
     </listingToolbar>
     <columns name="rabbitmq_imagemanager_log_columns">
+        <settings>
+            <editorConfig>
+                <param name="selectProvider" xsi:type="string">rabbitmq_imagemanager_log_listing.rabbitmq_imagemanager_log_listing.rabbitmq_imagemanager_log_columns.ids</param>
+                <param name="enabled" xsi:type="boolean">true</param>
+                <param name="indexField" xsi:type="string">log_id</param>
+                <param name="clientConfig" xsi:type="array">
+                    <item name="saveUrl" path="rabbitmq_imagemanager/log/inlineEditNew" xsi:type="url"/>
+                    <item name="validateBeforeSave" xsi:type="boolean">false</item>
+                </param>
+            </editorConfig>
+            <childDefaults>
+                <param name="fieldAction" xsi:type="array">
+                    <item name="provider" xsi:type="string">rabbitmq_imagemanager_log_listing.rabbitmq_imagemanager_log_listing.rabbitmq_imagemanager_log_columns_editor</item>
+                    <item name="target" xsi:type="string">startEdit</item>
+                    <item name="params" xsi:type="array">
+                        <item name="0" xsi:type="string">${ $.$data.rowIndex }</item>
+                        <item name="1" xsi:type="boolean">true</item>
+                    </item>
+                </param>
+            </childDefaults>
+        </settings>
         <selectionsColumn name="ids">
             <settings>
                 <indexField>log_id</indexField>
@@ -73,6 +94,12 @@
             <settings>
                 <filter>text</filter>
                 <label translate="true">Image Path</label>
+                <editor>
+                    <editorType>text</editorType>
+                    <validation>
+                        <rule name="required-entry" xsi:type="boolean">true</rule>
+                    </validation>
+                </editor>
             </settings>
         </column>
         <column name="created_at" class="Magento\Ui\Component\Listing\Columns\Date">

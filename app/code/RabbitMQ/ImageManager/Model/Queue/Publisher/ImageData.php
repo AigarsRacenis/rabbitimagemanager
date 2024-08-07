@@ -92,9 +92,9 @@ class ImageData
      * @param string $status
      * @param string $imagePath
      * @param string $enityId
-     * @param string $storeId
+     * @param $storeId
      */
-    private function addLog(string $messageType, string $status, string $imagePath, string $entityId, int $storeId): void
+    private function addLog(string $messageType, string $status, string $imagePath, string $entityId, $storeId): void
     {
         try {
             $log = $this->logFactory->create();

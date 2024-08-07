@@ -5,7 +5,7 @@ namespace RabbitMQ\ImageManager\Controller\Adminhtml\Log;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Ui\Component\MassAction\Filter;
-use RabbitMQ\ImageManager\Model\ResourceModel\Log\CollectionFactory; // Adjusted to match your log collection factory
+use RabbitMQ\ImageManager\Model\ResourceModel\Log\CollectionFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\App\ResourceConnection;

@@ -29,7 +29,7 @@ class Index extends Action
     public function execute()
     {
         $resultPage = $this->resultPageFactory->create();
-        $resultPage->getConfig()->getTitle()->prepend(__('RabbitMQ Image Manager Log'));
+        $resultPage->getConfig()->getTitle()->prepend(__('RabbitMQ Image Manager Log and Update'));
 
         return $resultPage;
     }
